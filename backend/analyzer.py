@@ -605,7 +605,7 @@ def analyze_with_ai(email: dict) -> Optional[dict]:
         client = Anthropic(api_key=api_key)
 
         message = client.messages.create(
-            model      = "claude-opus-4-7",
+            model      = "claude-3-5-sonnet-20241022",
             max_tokens = 1024,
             system     = (
                 "You are a cybersecurity expert specializing in email threat analysis.\n\n"
@@ -629,7 +629,7 @@ def analyze_with_ai(email: dict) -> Optional[dict]:
             messages=[{"role": "user", "content": _build_prompt(email)}],
         )
 
-        result   = json.loads(message.content[0].text.strip())
+        result   = _parse_ai_json(message.content[0].text)
         ai_score = max(0, min(100, int(result.get("ai_score", 50))))
 
         return {
@@ -638,7 +638,7 @@ def analyze_with_ai(email: dict) -> Optional[dict]:
         }
 
     except Exception as e:
-        logger.error(f"AI analysis failed: {type(e).__name__}")
+        logger.error(f"AI analysis failed: {type(e).__name__}: {e}")
         return None
 
 
@@ -691,7 +691,7 @@ def analyze_with_openai(email: dict) -> Optional[dict]:
             ],
         )
 
-        result   = json.loads(response.choices[0].message.content.strip())
+        result   = _parse_ai_json(response.choices[0].message.content)
         ai_score = max(0, min(100, int(result.get("ai_score", 50))))
 
         return {
@@ -700,8 +700,20 @@ def analyze_with_openai(email: dict) -> Optional[dict]:
         }
 
     except Exception as e:
-        logger.error(f"OpenAI analysis failed: {type(e).__name__}")
+        logger.error(f"OpenAI analysis failed: {type(e).__name__}: {e}")
         return None
+
+
+def _parse_ai_json(raw: str) -> dict:
+    """
+    Parses JSON from an AI response, stripping markdown code fences if present.
+    Some models wrap their JSON in ```json ... ``` even when asked not to.
+    """
+    text = raw.strip()
+    # Remove ```json ... ``` or ``` ... ``` wrappers
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    return json.loads(text.strip())
 
 
 def _build_prompt(email: dict) -> str:
