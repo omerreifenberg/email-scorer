@@ -49,15 +49,17 @@ class EmailRequest(BaseModel):
 # Defines exactly what we send back to the Add-on.
 # ---------------------------------------------------------------------------
 class AnalysisResponse(BaseModel):
-    final_score:     int
-    verdict:         str
-    technical_score: int
-    ai_score:        int | None
-    confidence:      str
-    confidence_dots: str
-    risk_factors:    list[str]
-    reasoning:       str
-    what_to_do:      str
+    final_score:       int
+    verdict:           str
+    technical_score:   int
+    ai_score:          int | None
+    confidence:        str
+    confidence_dots:   str
+    risk_factors:      list[str]
+    reasoning:         str
+    what_to_do:        str
+    sender_legitimacy: str
+    domain_suspicion:  str
 
 # CORS — allows the Gmail Add-on (running on Google's servers) to talk to our backend
 app.add_middleware(
@@ -115,9 +117,11 @@ def analyze(payload: EmailRequest, x_api_key: str = Header(None)):
         # Only one        → use that one
         # Neither         → None (technical score only)
         if claude_result and openai_result:
-            ai_score        = round((claude_result["ai_score"] + openai_result["ai_score"]) / 2)
-            reasoning       = claude_result["reasoning"]
+            ai_score           = round((claude_result["ai_score"] + openai_result["ai_score"]) / 2)
+            reasoning          = claude_result["reasoning"]
             ai_risk_indicators = claude_result.get("risk_indicators", [])
+            sender_legitimacy  = claude_result.get("sender_legitimacy", "Unclear")
+            domain_suspicion   = claude_result.get("domain_suspicion", "Medium")
             logger.info(
                 f"AI scores — Claude: {claude_result['ai_score']} | "
                 f"OpenAI: {openai_result['ai_score']} | "
@@ -127,14 +131,20 @@ def analyze(payload: EmailRequest, x_api_key: str = Header(None)):
             ai_score           = claude_result["ai_score"]
             reasoning          = claude_result["reasoning"]
             ai_risk_indicators = claude_result.get("risk_indicators", [])
+            sender_legitimacy  = claude_result.get("sender_legitimacy", "Unclear")
+            domain_suspicion   = claude_result.get("domain_suspicion", "Medium")
         elif openai_result:
             ai_score           = openai_result["ai_score"]
             reasoning          = openai_result["reasoning"]
             ai_risk_indicators = openai_result.get("risk_indicators", [])
+            sender_legitimacy  = openai_result.get("sender_legitimacy", "Unclear")
+            domain_suspicion   = openai_result.get("domain_suspicion", "Medium")
         else:
             ai_score           = None
             reasoning          = "AI analysis was not available."
             ai_risk_indicators = []
+            sender_legitimacy  = "Unclear"
+            domain_suspicion   = "Medium"
 
         # Step 7 — Combine scores into final result
         final_score, verdict = calculate_final_score(technical_score, ai_score)
@@ -149,13 +159,15 @@ def analyze(payload: EmailRequest, x_api_key: str = Header(None)):
         raise HTTPException(status_code=500, detail="Analysis failed. Please try again.")
 
     return AnalysisResponse(
-        final_score     = final_score,
-        verdict         = verdict,
-        technical_score = technical_score,
-        ai_score        = ai_score,
-        confidence      = confidence,
-        confidence_dots = confidence_dots,
-        risk_factors    = risk_factors,
-        reasoning       = reasoning,
-        what_to_do      = what_to_do,
+        final_score       = final_score,
+        verdict           = verdict,
+        technical_score   = technical_score,
+        ai_score          = ai_score,
+        confidence        = confidence,
+        confidence_dots   = confidence_dots,
+        risk_factors      = risk_factors,
+        reasoning         = reasoning,
+        what_to_do        = what_to_do,
+        sender_legitimacy = sender_legitimacy,
+        domain_suspicion  = domain_suspicion,
     )
