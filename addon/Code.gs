@@ -2,8 +2,8 @@
 // CONFIGURATION
 // Replace these values before deploying.
 // ---------------------------------------------------------------------------
-var BACKEND_URL = "https://YOUR_NGROK_URL/analyze";
-var API_KEY     = "your_secret_key_here"; // Must match SCORER_API_KEY in .env
+var BACKEND_URL = "https://email-scorer.onrender.com/analyze";
+var API_KEY     = "upwind123"; // Must match SCORER_API_KEY in .env
 
 
 // ---------------------------------------------------------------------------
@@ -124,25 +124,27 @@ function buildResultCard(result) {
     .setTitle(icon + "  " + verdict)
     .setSubtitle("Score: " + score + " / 100   " + confidenceDots + " " + confidence);
 
-  // ── Section 1: AI reasoning ──────────────────────────────────────────────
-  var reasoningSection = CardService.newCardSection()
+  // ── Section 1: AI summary (one short sentence) ──────────────────────────
+  var summarySection = CardService.newCardSection()
     .addWidget(
-      CardService.newTextParagraph().setText(reasoning)
+      CardService.newTextParagraph().setText("<i>" + reasoning + "</i>")
     );
 
-  // ── Section 2: WHY ───────────────────────────────────────────────────────
+  // ── Section 2: WHY (bullet points) ──────────────────────────────────────
   var whySection = CardService.newCardSection()
-    .setHeader("WHY");
+    .setHeader("⚠️ WHY");
 
   if (riskFactors.length === 0) {
     whySection.addWidget(
-      CardService.newTextParagraph().setText("No specific risks detected.")
+      CardService.newTextParagraph().setText("✔  No specific risks detected.")
     );
   } else {
     riskFactors.forEach(function(factor) {
       whySection.addWidget(
         CardService.newDecoratedText()
-          .setText("• " + factor)
+          .setText(factor)
+          .setStartIcon(CardService.newIconImage()
+            .setIconUrl("https://www.gstatic.com/images/icons/material/system/1x/warning_red_18dp.png"))
           .setWrapText(true)
       );
     });
@@ -150,16 +152,16 @@ function buildResultCard(result) {
 
   // ── Section 3: WHAT TO DO ────────────────────────────────────────────────
   var whatToDoSection = CardService.newCardSection()
-    .setHeader("WHAT TO DO")
+    .setHeader("✅ WHAT TO DO")
     .addWidget(
-      CardService.newTextParagraph().setText(whatToDo)
+      CardService.newTextParagraph().setText("<b>" + whatToDo + "</b>")
     );
 
   // ── Assemble card ────────────────────────────────────────────────────────
   return [
     CardService.newCardBuilder()
       .setHeader(header)
-      .addSection(reasoningSection)
+      .addSection(summarySection)
       .addSection(whySection)
       .addSection(whatToDoSection)
       .build()

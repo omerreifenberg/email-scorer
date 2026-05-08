@@ -115,29 +115,33 @@ def analyze(payload: EmailRequest, x_api_key: str = Header(None)):
         # Only one        → use that one
         # Neither         → None (technical score only)
         if claude_result and openai_result:
-            ai_score = round((claude_result["ai_score"] + openai_result["ai_score"]) / 2)
-            reasoning = claude_result["reasoning"]
+            ai_score        = round((claude_result["ai_score"] + openai_result["ai_score"]) / 2)
+            reasoning       = claude_result["reasoning"]
+            ai_risk_indicators = claude_result.get("risk_indicators", [])
             logger.info(
                 f"AI scores — Claude: {claude_result['ai_score']} | "
                 f"OpenAI: {openai_result['ai_score']} | "
                 f"Average: {ai_score}"
             )
         elif claude_result:
-            ai_score  = claude_result["ai_score"]
-            reasoning = claude_result["reasoning"]
+            ai_score           = claude_result["ai_score"]
+            reasoning          = claude_result["reasoning"]
+            ai_risk_indicators = claude_result.get("risk_indicators", [])
         elif openai_result:
-            ai_score  = openai_result["ai_score"]
-            reasoning = openai_result["reasoning"]
+            ai_score           = openai_result["ai_score"]
+            reasoning          = openai_result["reasoning"]
+            ai_risk_indicators = openai_result.get("risk_indicators", [])
         else:
-            ai_score  = None
-            reasoning = "AI analysis was not available."
+            ai_score           = None
+            reasoning          = "AI analysis was not available."
+            ai_risk_indicators = []
 
         # Step 7 — Combine scores into final result
         final_score, verdict = calculate_final_score(technical_score, ai_score)
 
         # Step 8 — Build human-readable output
         confidence, confidence_dots = calculate_confidence(signals)
-        risk_factors                = build_risk_factors(signals)
+        risk_factors                = build_risk_factors(signals, ai_risk_indicators)
         what_to_do                  = get_what_to_do(verdict)
 
     except Exception as e:
