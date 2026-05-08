@@ -618,7 +618,7 @@ def analyze_with_ai(email: dict) -> Optional[dict]:
         client = Anthropic(api_key=api_key)
 
         message = client.messages.create(
-            model      = "claude-3-5-sonnet-20241022",
+            model      = "claude-3-haiku-20240307",
             max_tokens = 1024,
             system     = _ai_system_prompt(),
             messages=[{"role": "user", "content": _build_prompt(email)}],
