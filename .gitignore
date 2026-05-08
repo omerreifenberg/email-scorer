@@ -1,0 +1,15 @@
+# Secrets — never upload to GitHub
+.env
+
+# Python virtual environment — large folder, not needed on GitHub
+venv/
+.venv/
+
+# Python auto-generated files — not needed
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
