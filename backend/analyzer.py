@@ -729,11 +729,9 @@ def analyze_with_ai(email: dict) -> Optional[dict]:
         risk_indicators = result.get("risk_indicators", [])
 
         return {
-            "ai_score":          ai_score,
-            "reasoning":         result.get("reasoning", ""),
-            "risk_indicators":   risk_indicators if isinstance(risk_indicators, list) else [],
-            "sender_legitimacy": result.get("sender_legitimacy", "Unclear"),
-            "domain_suspicion":  result.get("domain_suspicion", "Medium"),
+            "ai_score":        ai_score,
+            "reasoning":       result.get("reasoning", ""),
+            "risk_indicators": risk_indicators if isinstance(risk_indicators, list) else [],
         }
 
     except Exception as e:
@@ -780,11 +778,9 @@ def analyze_with_openai(email: dict) -> Optional[dict]:
         risk_indicators = result.get("risk_indicators", [])
 
         return {
-            "ai_score":          ai_score,
-            "reasoning":         result.get("reasoning", ""),
-            "risk_indicators":   risk_indicators if isinstance(risk_indicators, list) else [],
-            "sender_legitimacy": result.get("sender_legitimacy", "Unclear"),
-            "domain_suspicion":  result.get("domain_suspicion", "Medium"),
+            "ai_score":        ai_score,
+            "reasoning":       result.get("reasoning", ""),
+            "risk_indicators": risk_indicators if isinstance(risk_indicators, list) else [],
         }
 
     except Exception as e:
@@ -844,8 +840,6 @@ def _ai_system_prompt() -> str:
         "  risk_indicators   — array of 2–4 short strings (max 8 words each) listing specific red flags.\n"
         "                      Write in plain, user-friendly language. Avoid technical jargon.\n"
         "                      Empty array [] if the email appears safe.\n"
-        "  sender_legitimacy — one of: 'Likely Legitimate', 'Unclear', 'Likely Suspicious'\n"
-        "  domain_suspicion  — one of: 'Low', 'Medium', 'High'\n"
         "Return valid JSON only. No markdown. No extra text."
     )
 
