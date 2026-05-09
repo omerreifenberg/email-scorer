@@ -404,6 +404,11 @@ def _check_typosquatting(domain: str) -> Signal:
         return Signal(name="typosquatting", triggered=False, checked=False,
                       weight=SIGNAL_WEIGHTS["typosquatting"])
 
+    # If the domain itself is a known legitimate brand — nothing to check
+    if domain in KNOWN_BRANDS:
+        return Signal(name="typosquatting", triggered=False, checked=True,
+                      weight=SIGNAL_WEIGHTS["typosquatting"])
+
     normalized = _normalize(domain)
 
     for brand in KNOWN_BRANDS:
