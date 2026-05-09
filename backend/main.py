@@ -145,7 +145,7 @@ def analyze(payload: EmailRequest, x_api_key: str = Header(None)):
         what_to_do                  = get_what_to_do(verdict)
 
     except Exception as e:
-        logger.error(f"Analysis pipeline failed: {type(e).__name__}: {e}")
+        logger.error(f"Analysis pipeline failed: {type(e).__name__}")
         raise HTTPException(status_code=500, detail="Analysis failed. Please try again.")
 
     return AnalysisResponse(
