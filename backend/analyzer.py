@@ -830,8 +830,8 @@ def _ai_system_prompt() -> str:
         "- Do NOT overfit on single keywords — consider the overall context.\n"
         "- Prefer 'Suspicious' over 'Malicious' when evidence is partial.\n"
         "- Score 0–30: Safe — routine email, no red flags.\n"
-        "- Score 31–65: Suspicious — mixed signals.\n"
-        "- Score 66–100: Malicious — clear red flags.\n\n"
+        "- Score 31–59: Suspicious — mixed signals.\n"
+        "- Score 60–100: Malicious — clear red flags.\n\n"
 
         "Return a JSON object with EXACTLY these fields:\n"
         "  ai_score          — integer 0 to 100\n"
