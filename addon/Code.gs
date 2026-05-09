@@ -124,7 +124,6 @@ function buildResultCard(result) {
 
   // ── Score + Confidence as separate lines ─────────────────────────────────
   var scoreSection = CardService.newCardSection()
-    .setHasDivider(true)
     .addWidget(
       CardService.newTextParagraph()
         .setText("<font color='#444444'>Risk Score: </font><b>" + score + " / 100</b>")
@@ -135,14 +134,10 @@ function buildResultCard(result) {
     );
 
   // ── Section 1: Analysis Summary ──────────────────────────────────────────
-  // Bullet icon: green check for Safe, red warning for Suspicious / Malicious
-  var bulletIcon = verdict === "Safe"
-    ? "https://www.gstatic.com/images/icons/material/system/1x/check_circle_green_18dp.png"
-    : "https://www.gstatic.com/images/icons/material/system/1x/warning_red_18dp.png";
+  var bullet = "•  ";
 
   var findingsSection = CardService.newCardSection()
-    .setHeader("Analysis summary:")
-    .setHasDivider(true);
+    .setHeader("Analysis summary:");
 
   if (riskFactors.length === 0) {
     findingsSection.addWidget(
@@ -151,10 +146,7 @@ function buildResultCard(result) {
   } else {
     riskFactors.forEach(function(factor) {
       findingsSection.addWidget(
-        CardService.newDecoratedText()
-          .setText(factor)
-          .setStartIcon(CardService.newIconImage().setIconUrl(bulletIcon))
-          .setWrapText(true)
+        CardService.newTextParagraph().setText(bullet + factor)
       );
     });
   }
