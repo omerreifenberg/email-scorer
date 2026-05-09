@@ -158,10 +158,11 @@ def calculate_technical_score(signals: list[Signal]) -> int:
         Score is calculated normally from all other signals (weights sum to 100).
 
     If URLhaus DID find the domain:
-        Base score (from all other signals) is scaled down to 80 points,
-        then 20 points are added for URLhaus.
-        This way URLhaus always contributes exactly 20 points when triggered,
-        and the total always stays within 0-100.
+        Base score is scaled to 69% and a floor of 31 is added.
+        Formula: round(base * 0.69) + 31
+        This ensures the score is always at least 31 (Suspicious) when URLhaus triggers,
+        while preserving the relative weight of other signals.
+        Total always stays within 0-100.
     """
     urlhaus = next((s for s in signals if s.name == "urlhaus"), None)
     others  = [s for s in signals if s.name != "urlhaus"]
