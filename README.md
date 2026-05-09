@@ -81,13 +81,13 @@ Each check returns a `Signal` with a weight. If triggered, its weight is added t
 
 ### Step 2 — Real-Time URL Check (URLhaus)
 
-All links in the email body are checked against [URLhaus](https://urlhaus.abuse.ch/) — a public database of known malicious URLs maintained by security researchers. To keep latency low, only the first 5 links are checked. If any link matches, the score is recalculated using `round(base × 0.69) + 31`, ensuring a minimum of 31 (Suspicious) while scaling other signals proportionally.
+Links in the email body are checked against [URLhaus](https://urlhaus.abuse.ch/) — a public database of known malicious URLs maintained by security researchers. To keep latency low, only the first 5 links are checked. If any link matches, the score is recalculated using `round(base × 0.69) + 31`, ensuring a minimum of 31 (Suspicious) while scaling other signals proportionally.
 
 ### Step 3 — Dual AI Analysis
 
 The email content (not the technical signals) is independently analyzed by two models:
 
-- **Claude** (`claude-3-5-haiku-20241022`) via Anthropic API
+- **Claude** (`claude-haiku-4-5`) via Anthropic API
 - **GPT-4o** via OpenAI API
 
 Both models receive the same prompt and scoring guidelines. If both are available, their scores are averaged. If only one is available, that score is used. If neither is available, the final score falls back to the technical score alone — the system degrades gracefully.
@@ -150,7 +150,6 @@ email-scorer/
 │   ├── main.py                  # FastAPI app — request handling and pipeline orchestration
 │   ├── analyzer.py              # All analysis logic — signals, scoring, AI calls
 │   └── requirements.txt
-├── SIGNAL_WEIGHTS_EXPLAINED.md  # Reasoning behind each signal weight
 └── README.md
 ```
 
