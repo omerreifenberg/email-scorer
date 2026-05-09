@@ -86,17 +86,17 @@ KEYWORD_EVIDENCE = {
 
 # Weight per signal — total exceeds 100 intentionally; score is capped at 100
 SIGNAL_WEIGHTS = {
-    "spf":                17,
-    "dkim":               17,
-    "dmarc":              13,
-    "reply_to_mismatch":  13,
-    "typosquatting":       6,
-    "suspicious_links":    7,
-    "hidden_text":         5,
-    "domain_reputation":   8,
-    "personal_info":       4,
-    "urgency":             2,
-    "display_name_spoofing": 13,
+    "spf":                10,
+    "dkim":               10,
+    "dmarc":               8,
+    "reply_to_mismatch":  15,
+    "typosquatting":      10,
+    "suspicious_links":   13,
+    "hidden_text":         7,
+    "domain_reputation":  10,
+    "personal_info":       6,
+    "urgency":             3,
+    "display_name_spoofing": 15,
 }
 
 
