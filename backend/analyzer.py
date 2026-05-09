@@ -90,7 +90,7 @@ SIGNAL_WEIGHTS = {
     "dkim":               10,
     "dmarc":               8,
     "reply_to_mismatch":  15,
-    "typosquatting":      10,
+    "typosquatting":      11,
     "suspicious_links":   13,
     "hidden_text":         7,
     "domain_reputation":  10,
