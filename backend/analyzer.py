@@ -827,6 +827,7 @@ def _ai_system_prompt() -> str:
         "  ai_score          — integer 0 to 100\n"
         "  reasoning         — ONE short sentence (max 15 words) summarizing the verdict\n"
         "  risk_indicators   — array of 2–4 short strings (max 8 words each) listing specific red flags.\n"
+        "                      Write in plain, user-friendly language. Avoid technical jargon.\n"
         "                      Empty array [] if the email appears safe.\n"
         "  sender_legitimacy — one of: 'Likely Legitimate', 'Unclear', 'Likely Suspicious'\n"
         "  domain_suspicion  — one of: 'Low', 'Medium', 'High'\n"
