@@ -130,7 +130,7 @@ Security was treated as a first-class concern throughout.
 
 **API security:**
 - The backend requires an `X-API-Key` header on every request
-- API keys (Anthropic, OpenAI, backend key) are stored as environment variables — never in code
+- API keys (Anthropic, OpenAI, backend key) are stored as environment variables — never in code (except for a simple demo key used by the Apps Script client)
 - The `.env` file is listed in `.gitignore`
 
 **Sensitive data:**
