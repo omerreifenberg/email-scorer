@@ -506,7 +506,8 @@ def _check_links(body: str) -> Signal:
 
     count    = len(found)
     label    = "link" if count == 1 else "links"
-    evidence = f"{count} suspicious {label}: " + ", ".join(parts)
+    prefix   = "Suspicious link" if count == 1 else f"{count} suspicious links"
+    evidence = prefix + ": " + ", ".join(parts)
 
     return Signal(
         name      = "suspicious_links",
