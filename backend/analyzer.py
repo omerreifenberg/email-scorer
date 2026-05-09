@@ -714,7 +714,10 @@ def analyze_with_ai(email: dict) -> Optional[dict]:
         )
 
         result          = _parse_ai_json(message.content[0].text)
-        ai_score        = max(0, min(100, int(result.get("ai_score", 50))))
+        try:
+            ai_score = max(0, min(100, int(float(str(result.get("ai_score", 50))))))
+        except (ValueError, TypeError):
+            ai_score = 50
         risk_indicators = result.get("risk_indicators", [])
 
         return {
@@ -762,7 +765,10 @@ def analyze_with_openai(email: dict) -> Optional[dict]:
         )
 
         result          = _parse_ai_json(response.choices[0].message.content)
-        ai_score        = max(0, min(100, int(result.get("ai_score", 50))))
+        try:
+            ai_score = max(0, min(100, int(float(str(result.get("ai_score", 50))))))
+        except (ValueError, TypeError):
+            ai_score = 50
         risk_indicators = result.get("risk_indicators", [])
 
         return {
