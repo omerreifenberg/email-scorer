@@ -40,7 +40,7 @@ Google Apps Script (Code.gs)
 FastAPI Backend (Python, deployed on Render)
     │
     ├── sanitize_input()          — enforce input size limits
-    ├── extract_signals()         — 11 rule-based technical checks
+    ├── extract_signals()         — 11 weighted signals + real-time URLhaus check
     ├── calculate_technical_score()
     ├── analyze_with_ai()         — Claude claude-3-5-haiku-20241022
     ├── analyze_with_openai()     — GPT-4o (cross-validation)
@@ -54,7 +54,7 @@ The add-on is deliberately thin — it reads the email and renders the result. A
 
 ## How the Score Works
 
-### Step 1 — Technical Signals (11 checks)
+### Step 1 — Technical Signals (11 weighted checks)
 
 Each check returns a `Signal` with a weight. If triggered, its weight is added to the technical score.
 
@@ -81,7 +81,7 @@ Each check returns a `Signal` with a weight. If triggered, its weight is added t
 
 ### Step 2 — Real-Time URL Check (URLhaus)
 
-All links in the email body are checked against [URLhaus](https://urlhaus.abuse.ch/) — a public database of known malicious URLs maintained by security researchers. If any link matches, the score is recalculated with a floor of 31 (Suspicious minimum), ensuring a confirmed malicious domain always produces at minimum a Suspicious verdict.
+All links in the email body are checked against [URLhaus](https://urlhaus.abuse.ch/) — a public database of known malicious URLs maintained by security researchers. To keep latency low, only the first 5 links are checked. If any link matches, the score is recalculated using `round(base × 0.69) + 31`, ensuring a minimum of 31 (Suspicious) while scaling other signals proportionally.
 
 ### Step 3 — Dual AI Analysis
 
@@ -144,7 +144,8 @@ Security was treated as a first-class concern throughout.
 ```
 email-scorer/
 ├── addon/
-│   └── Code.gs                  # Google Apps Script — Gmail Add-on
+│   ├── Code.gs                  # Google Apps Script — Gmail Add-on
+│   └── appsscript.json          # Add-on manifest — permissions, triggers, metadata
 ├── backend/
 │   ├── main.py                  # FastAPI app — request handling and pipeline orchestration
 │   ├── analyzer.py              # All analysis logic — signals, scoring, AI calls
@@ -212,3 +213,7 @@ Technical signals are deterministic and hard to manipulate. AI scoring adds cont
 - Cache URLhaus results to reduce latency on repeated domains
 - Add a feedback mechanism so users can mark false positives/negatives
 - Move to a paid hosting tier to eliminate cold-start delays
+
+---
+
+The goal of this system is not perfect detection, but explainable and practical risk assessment — giving users the right information to make an informed decision about every email they open.
