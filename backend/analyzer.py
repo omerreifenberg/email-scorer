@@ -409,27 +409,76 @@ def _check_typosquatting(domain: str) -> Signal:
                   weight=SIGNAL_WEIGHTS["typosquatting"])
 
 
+DANGEROUS_EXTENSIONS = [
+    ".exe", ".bat", ".cmd", ".com", ".msi",   # Windows executables
+    ".ps1", ".vbs", ".js", ".jar",             # Scripts
+    ".zip", ".rar", ".7z",                     # Archives (often contain malware)
+]
+
 def _check_links(body: str) -> Signal:
+    """
+    Checks all links in the email body for four suspicious patterns:
+
+    1. URL shorteners — hide the real destination (bit.ly, tinyurl, etc.)
+    2. Raw IP addresses — legitimate sites use domain names, not IPs
+    3. HTTP (not HTTPS) — unencrypted connection, data sent in plain text
+    4. Dangerous file extensions — links that directly download executable files
+    """
     urls  = re.findall(r"https?://[^\s<>\"]+", body)[:MAX_LINKS_ANALYZED]
     found = []
 
     for url in urls:
+        reason = None
+
+        # 1. URL shortener
         for pattern in SHORTENER_PATTERNS:
             if re.search(pattern, url, re.IGNORECASE):
-                found.append(url)
+                reason = "shortener"
                 break
 
-    if found:
-        return Signal(
-            name      = "suspicious_links",
-            triggered = True,
-            checked   = True,
-            weight    = SIGNAL_WEIGHTS["suspicious_links"],
-            evidence  = f"{len(found)} link(s) that hide their real destination",
-        )
+        # 2. Raw IP address (e.g. http://185.12.34.5/login)
+        if not reason and re.search(r"https?://\d{1,3}(\.\d{1,3}){3}", url):
+            reason = "ip"
 
-    return Signal(name="suspicious_links", triggered=False, checked=True,
-                  weight=SIGNAL_WEIGHTS["suspicious_links"])
+        # 3. HTTP without HTTPS
+        if not reason and url.startswith("http://"):
+            reason = "http"
+
+        # 4. Dangerous file extension
+        if not reason:
+            for ext in DANGEROUS_EXTENSIONS:
+                if url.lower().split("?")[0].endswith(ext):
+                    reason = "extension"
+                    break
+
+        if reason:
+            found.append((url, reason))
+
+    if not found:
+        return Signal(name="suspicious_links", triggered=False, checked=True,
+                      weight=SIGNAL_WEIGHTS["suspicious_links"])
+
+    # Build a clear evidence message based on what was found
+    reasons = set(r for _, r in found)
+    parts   = []
+    if "shortener" in reasons:
+        parts.append("link shortener hiding real destination")
+    if "ip" in reasons:
+        parts.append("raw IP address instead of domain")
+    if "http" in reasons:
+        parts.append("unencrypted HTTP link")
+    if "extension" in reasons:
+        parts.append("link downloads a potentially dangerous file")
+
+    evidence = f"{len(found)} suspicious link(s): " + ", ".join(parts)
+
+    return Signal(
+        name      = "suspicious_links",
+        triggered = True,
+        checked   = True,
+        weight    = SIGNAL_WEIGHTS["suspicious_links"],
+        evidence  = evidence,
+    )
 
 
 def _check_keywords(text: str, keyword_list: list[str], name: str, weight: int) -> Signal:
@@ -640,7 +689,7 @@ def analyze_with_ai(email: dict) -> Optional[dict]:
         }
 
     except Exception as e:
-        logger.error(f"AI analysis failed: {type(e).__name__}: {e}")
+        logger.error(f"AI analysis failed: {type(e).__name__}")
         return None
 
 
@@ -688,7 +737,7 @@ def analyze_with_openai(email: dict) -> Optional[dict]:
         }
 
     except Exception as e:
-        logger.error(f"OpenAI analysis failed: {type(e).__name__}: {e}")
+        logger.error(f"OpenAI analysis failed: {type(e).__name__}")
         return None
 
 
@@ -705,7 +754,7 @@ def _ai_system_prompt() -> str:
         "ANALYSIS FRAMEWORK — check these signals:\n\n"
 
         "1. SENDER LEGITIMACY\n"
-        "   - Use your real-world knowledge to assess if the sender domain belongs to a known organization.\n"
+        "   - Assess whether the sender appears legitimate based on visible domain structure and common public knowledge, without claiming verification.\n"
         "   - .gov.il = Israeli government (high trust)\n"
         "   - .ac.il = Israeli academic institution (high trust)\n"
         "   - .org.il / .co.il = Israeli organizations (medium trust)\n"
