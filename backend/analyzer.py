@@ -83,7 +83,7 @@ KEYWORD_EVIDENCE = {
     "personal_info": "Asks for personal or financial information",
 }
 
-# Weight per signal — all weights together sum to 99
+# Weight per signal — total exceeds 100 intentionally; score is capped at 100
 SIGNAL_WEIGHTS = {
     "spf":                17,
     "dkim":               17,
@@ -558,10 +558,13 @@ def _check_hidden_text(html_body: str) -> Signal:
     Detects text intentionally hidden from the reader using CSS tricks.
     Attackers use this to fool spam filters or inject instructions to AI.
 
-    We look for three patterns:
+    We look for two patterns:
     - White or near-white text color (invisible on white background)
     - Font size of 0 or 1px (text exists but is invisible)
-    - display:none or visibility:hidden (text in DOM but not shown)
+
+    Note: display:none / visibility:hidden was intentionally excluded —
+    it is extremely common in legitimate HTML emails (responsive design,
+    tracking pixels, preheader text) and would cause too many false positives.
     """
     if not html_body:
         return Signal(name="hidden_text", triggered=False, checked=False,
