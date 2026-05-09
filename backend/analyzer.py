@@ -171,7 +171,10 @@ def calculate_technical_score(signals: list[Signal]) -> int:
         if not signal.checked or not signal.triggered:
             continue
         if signal.name == "suspicious_links" and signal.evidence:
-            count = int(signal.evidence.split()[0])
+            try:
+                count = int(signal.evidence.split()[0])
+            except (ValueError, TypeError):
+                count = 1
             base += min(count * 2.5, SIGNAL_WEIGHTS["suspicious_links"])
         else:
             base += signal.weight
