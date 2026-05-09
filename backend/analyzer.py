@@ -315,6 +315,11 @@ def _auth_plain_language(protocol: str) -> str:
 
 
 def _check_reply_to(sender: str, headers: dict) -> Signal:
+    """
+    Detects Reply-To mismatch — when the Reply-To address points to a different
+    domain than the sender. This hides where replies actually go, a common
+    phishing technique to intercept responses without the victim noticing.
+    """
     reply_to = headers.get("Reply-To", "")
 
     if not reply_to:
