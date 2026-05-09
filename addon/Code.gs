@@ -102,68 +102,77 @@ function callBackend(payload) {
 // ---------------------------------------------------------------------------
 // BUILD RESULT CARD
 // Builds the visual panel shown to the user in Gmail.
-// Structure we decided on:
-//   1. Risk level + Score + Confidence
-//   2. Reasoning (AI explanation)
-//   3. WHY — risk factors (up to 4)
-//   4. WHAT TO DO
+// Structure:
+//   Header   : verdict icon + label
+//   Subtitle : Risk Score + Confidence level
+//   Section 1: 🔍 Analysis Findings — up to 4 signals (technical + AI)
+//   Section 2: ✅ Recommended Action — one clear instruction
 // ---------------------------------------------------------------------------
 function buildResultCard(result) {
-  var verdict         = result.verdict;
-  var score           = result.final_score;
-  var confidence      = result.confidence;
-  var confidenceDots  = result.confidence_dots;
-  var riskFactors     = result.risk_factors  || [];
-  var reasoning       = result.reasoning     || "";
-  var whatToDo        = result.what_to_do    || "";
+  var verdict        = result.verdict;
+  var score          = result.final_score;
+  var confidence     = result.confidence;
+  var confidenceDots = result.confidence_dots;
+  var riskFactors    = result.risk_factors || [];
+  var whatToDo       = result.what_to_do   || "";
 
-  // ── Header: icon + verdict + score ──────────────────────────────────────
+  // ── Header ───────────────────────────────────────────────────────────────
   var icon = verdict === "Safe" ? "✅" : verdict === "Suspicious" ? "⚠️" : "🚨";
 
   var header = CardService.newCardHeader()
-    .setTitle(icon + "  " + verdict)
-    .setSubtitle("Score: " + score + " / 100   " + confidenceDots + " " + confidence);
+    .setTitle(icon + "  " + verdict);
 
-  // ── Section 1: AI summary (one short sentence) ──────────────────────────
-  var summarySection = CardService.newCardSection()
+  // ── Score + Confidence as separate lines ─────────────────────────────────
+  var scoreSection = CardService.newCardSection()
+    .setHasDivider(true)
     .addWidget(
-      CardService.newTextParagraph().setText("<i>" + reasoning + "</i>")
+      CardService.newTextParagraph()
+        .setText("<font color='#444444'>Risk Score: </font><b>" + score + " / 100</b>")
+    )
+    .addWidget(
+      CardService.newTextParagraph()
+        .setText("<font color='#444444'>Confidence: " + confidence + "  " + confidenceDots + "</font>")
     );
 
-  // ── Section 2: WHY (bullet points) ──────────────────────────────────────
-  var whySection = CardService.newCardSection()
-    .setHeader("⚠️ WHY");
+  // ── Section 1: Analysis Summary ──────────────────────────────────────────
+  // Bullet icon: green check for Safe, red warning for Suspicious / Malicious
+  var bulletIcon = verdict === "Safe"
+    ? "https://www.gstatic.com/images/icons/material/system/1x/check_circle_green_18dp.png"
+    : "https://www.gstatic.com/images/icons/material/system/1x/warning_red_18dp.png";
+
+  var findingsSection = CardService.newCardSection()
+    .setHeader("Analysis summary:")
+    .setHasDivider(true);
 
   if (riskFactors.length === 0) {
-    whySection.addWidget(
-      CardService.newTextParagraph().setText("✔  No specific risks detected.")
+    findingsSection.addWidget(
+      CardService.newTextParagraph().setText("✔  No suspicious signals detected.")
     );
   } else {
     riskFactors.forEach(function(factor) {
-      whySection.addWidget(
+      findingsSection.addWidget(
         CardService.newDecoratedText()
           .setText(factor)
-          .setStartIcon(CardService.newIconImage()
-            .setIconUrl("https://www.gstatic.com/images/icons/material/system/1x/warning_red_18dp.png"))
+          .setStartIcon(CardService.newIconImage().setIconUrl(bulletIcon))
           .setWrapText(true)
       );
     });
   }
 
-  // ── Section 3: WHAT TO DO ────────────────────────────────────────────────
-  var whatToDoSection = CardService.newCardSection()
-    .setHeader("✅ WHAT TO DO")
+  // ── Section 2: Recommended Action ────────────────────────────────────────
+  var actionSection = CardService.newCardSection()
+    .setHeader("✅ Recommended Action")
     .addWidget(
       CardService.newTextParagraph().setText("<b>" + whatToDo + "</b>")
     );
 
-  // ── Assemble card ────────────────────────────────────────────────────────
+  // ── Assemble ──────────────────────────────────────────────────────────────
   return [
     CardService.newCardBuilder()
       .setHeader(header)
-      .addSection(summarySection)
-      .addSection(whySection)
-      .addSection(whatToDoSection)
+      .addSection(scoreSection)
+      .addSection(findingsSection)
+      .addSection(actionSection)
       .build()
   ];
 }
@@ -175,12 +184,17 @@ function buildResultCard(result) {
 // ---------------------------------------------------------------------------
 function buildErrorCard(errorMessage) {
   var header = CardService.newCardHeader()
-    .setTitle("⚠️  Analysis Failed");
+    .setTitle("⚠️  Analysis Unavailable")
+    .setSubtitle("Could not scan this email");
 
   var section = CardService.newCardSection()
     .addWidget(
       CardService.newTextParagraph()
-        .setText("Could not analyze this email.\n\n" + errorMessage)
+        .setText("The email scanner is temporarily unavailable. Please try again in a moment.")
+    )
+    .addWidget(
+      CardService.newTextParagraph()
+        .setText("<font color='#888888'><i>" + errorMessage + "</i></font>")
     );
 
   return [

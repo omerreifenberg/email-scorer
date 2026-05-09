@@ -80,7 +80,7 @@ PERSONAL_INFO_KEYWORDS = [
 ]
 
 KEYWORD_EVIDENCE = {
-    "urgency":       "Uses urgent language to pressure you into acting",
+    "urgency":       "Uses urgency to pressure you into acting",
     "personal_info": "Asks for personal or financial information",
 }
 
@@ -241,7 +241,7 @@ def get_what_to_do(verdict: str) -> str:
     elif verdict == "Suspicious":
         return "Proceed with caution. Verify the sender before clicking any links."
     else:
-        return "This email appears legitimate."
+        return "This email appears legitimate, but always avoid clicking unexpected links."
 
 
 # ===========================================================================
@@ -496,15 +496,17 @@ def _check_links(body: str) -> Signal:
     reasons = set(r for _, r in found)
     parts   = []
     if "shortener" in reasons:
-        parts.append("link shortener hiding real destination")
+        parts.append("link hides its real destination")
     if "ip" in reasons:
-        parts.append("raw IP address instead of domain")
+        parts.append("link points to a raw IP address")
     if "http" in reasons:
-        parts.append("unencrypted HTTP link")
+        parts.append("contains an unsecured (HTTP) link")
     if "extension" in reasons:
-        parts.append("link downloads a potentially dangerous file")
+        parts.append("link leads to a potentially dangerous file")
 
-    evidence = f"{len(found)} suspicious link(s): " + ", ".join(parts)
+    count    = len(found)
+    label    = "link" if count == 1 else "links"
+    evidence = f"{count} suspicious {label}: " + ", ".join(parts)
 
     return Signal(
         name      = "suspicious_links",
@@ -655,9 +657,9 @@ def _check_hidden_text(html_body: str) -> Signal:
 
     patterns = [
         (r"color\s*:\s*(white|#fff{1,3}|#ffffff|rgba?\(255,\s*255,\s*255)",
-         "White text found (invisible on white background)"),
+         "Contains hidden or invisible text (white on white)"),
         (r"font-size\s*:\s*[01](px)?[^0-9]",
-         "Text with font size 0 or 1px found (invisible to reader)"),
+         "Contains hidden or invisible text (zero-size font)"),
     ]
 
     for pattern, description in patterns:
