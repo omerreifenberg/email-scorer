@@ -190,29 +190,3 @@ Health check: `GET /health` → `{"status": "ok"}`
 4. Deploy as a Gmail Add-on (Extensions → Add-ons → Deploy)
 5. Install the add-on on your Gmail account
 
----
-
-## Design Decisions & Trade-offs
-
-**Why a separate backend?**
-Google Apps Script has no access to external ML models, no ability to call internal Python libraries, and strict execution time limits. Moving all logic to a Python backend gives full control over the analysis pipeline and makes it independently testable.
-
-**Why two AI models?**
-A single AI model can be manipulated through carefully crafted email content (prompt injection). Using two independent models with averaged scores makes this significantly harder. It also reduces variance — one model's blind spots are likely covered by the other.
-
-**Why 60% technical / 40% AI?**
-Technical signals are deterministic and hard to manipulate. AI scoring adds contextual understanding but can be influenced by email content. The 60/40 split reflects this trust hierarchy.
-
-**Why not score attachments?**
-`has_attachments` is collected but not yet scored. A standalone "has attachments" signal has too high a false positive rate — most legitimate business emails include attachments. A meaningful attachment signal would need to combine presence with other indicators (e.g., unexpected attachment type + urgency language + auth failure). This is reserved for a future iteration.
-
-**What I would do with more time:**
-- Add an attachment analysis signal (file type + content inspection)
-- Integrate WHOIS data to check domain registration age (newly registered domains are a strong phishing indicator)
-- Cache URLhaus results to reduce latency on repeated domains
-- Add a feedback mechanism so users can mark false positives/negatives
-- Move to a paid hosting tier to eliminate cold-start delays
-
----
-
-The goal of this system is not perfect detection, but explainable and practical risk assessment — giving users the right information to make an informed decision about every email they open.
