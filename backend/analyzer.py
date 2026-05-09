@@ -262,7 +262,7 @@ def calculate_final_score(technical_score: int, ai_score: Optional[int]) -> tupl
 
     if final <= 30:
         verdict = "Safe"
-    elif final <= 65:
+    elif final <= 59:
         verdict = "Suspicious"
     else:
         verdict = "Malicious"
