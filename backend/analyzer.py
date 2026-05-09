@@ -84,15 +84,15 @@ KEYWORD_EVIDENCE = {
     "personal_info": "Asks for personal or financial information",
 }
 
-# Weight per signal — total exceeds 100 intentionally; score is capped at 100
+# Weight per signal — total sums to exactly 100
 SIGNAL_WEIGHTS = {
-    "spf":                10,
-    "dkim":               10,
-    "dmarc":               8,
+    "spf":                 8,
+    "dkim":                8,
+    "dmarc":               6,
     "reply_to_mismatch":  15,
     "typosquatting":      11,
     "suspicious_links":   13,
-    "hidden_text":         7,
+    "hidden_text":         5,
     "domain_reputation":  10,
     "personal_info":       6,
     "urgency":             3,
@@ -148,7 +148,7 @@ def extract_signals(email: dict) -> list[Signal]:
 # ===========================================================================
 # STEP 3 — TECHNICAL SCORE
 # Add up points for every triggered signal.
-# Weights sum to ~100, so the result is already 0–100.
+# Weights sum to exactly 100, so the result is already 0–100.
 # ===========================================================================
 def calculate_technical_score(signals: list[Signal]) -> int:
     """
@@ -508,7 +508,6 @@ def _check_links(body: str) -> Signal:
         parts.append("link leads to a potentially dangerous file")
 
     count    = len(found)
-    label    = "link" if count == 1 else "links"
     prefix   = "Suspicious link" if count == 1 else f"{count} suspicious links"
     evidence = prefix + ": " + ", ".join(parts)
 

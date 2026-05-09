@@ -13,19 +13,19 @@
 
 ```python
 SIGNAL_WEIGHTS = {
-    "spf":                   10,
-    "dkim":                  10,
-    "dmarc":                  8,
+    "spf":                    8,
+    "dkim":                   8,
+    "dmarc":                  6,
     "reply_to_mismatch":     15,
     "typosquatting":         11,
     "suspicious_links":      13,
-    "hidden_text":            7,
+    "hidden_text":            5,
     "domain_reputation":     10,
     "personal_info":          6,
     "urgency":                3,
     "display_name_spoofing": 15,
 }
-# סה"כ: 107 — מוגבל ל-100 בכוונה
+# סה"כ: 100
 ```
 
 ---
@@ -92,14 +92,14 @@ SIGNAL_WEIGHTS = {
 
 | סיגנל | לפני | אחרי | סיבה |
 |---|---|---|---|
-| spf | 17 | 10 | פישינג מתוחכם עובר SPF |
-| dkim | 17 | 10 | פישינג מתוחכם עובר DKIM |
-| dmarc | 13 | 8 | הרבה לגיטימיים אין DMARC |
+| spf | 17 | 8 | פישינג מתוחכם עובר SPF |
+| dkim | 17 | 8 | פישינג מתוחכם עובר DKIM |
+| dmarc | 13 | 6 | הרבה לגיטימיים אין DMARC |
 | display_name_spoofing | 13 | 15 | סיגנל חזק של כוונת הונאה |
 | reply_to_mismatch | 13 | 15 | סיגנל חזק של כוונת הונאה |
 | suspicious_links | 7 | 15 | לב הפישינג |
 | typosquatting | 6 | 10 | קשה לזייף, מצביע על כוונה |
 | domain_reputation | 8 | 10 | חיזוק בדיקות הדומיין |
-| hidden_text | 5 | 7 | עלייה קלה |
+| hidden_text | 5 | 5 | ללא שינוי |
 | personal_info | 4 | 6 | עלייה קלה |
 | urgency | 2 | 3 | עלייה קלה |
