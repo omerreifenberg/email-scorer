@@ -16,7 +16,8 @@ MAX_SUBJECT_LENGTH = 500
 MAX_BODY_LENGTH    = 8_000
 MAX_SENDER_LENGTH  = 200
 MAX_HEADER_LENGTH  = 500
-MAX_LINKS_ANALYZED = 20
+MAX_LINKS_ANALYZED        = 20  # For general link checks (_check_links)
+MAX_LINKS_URLHAUS         =  5  # For URLhaus checks — limits max wait to 5 seconds
 
 # ---------------------------------------------------------------------------
 # SIGNAL — uniform structure for every single check
@@ -504,7 +505,7 @@ def _check_urlhaus(body: str) -> Signal:
     If any link's domain is found → triggered = True (strong evidence of malice)
     If no links, or request fails → checked = False (no effect on score)
     """
-    urls = re.findall(r"https?://[^\s<>\"]+", body)[:MAX_LINKS_ANALYZED]
+    urls = re.findall(r"https?://[^\s<>\"]+", body)[:MAX_LINKS_URLHAUS]
 
     if not urls:
         return Signal(name="urlhaus", triggered=False, checked=False, weight=0)
@@ -521,7 +522,7 @@ def _check_urlhaus(body: str) -> Signal:
             response = requests.post(
                 "https://urlhaus-api.abuse.ch/v1/host/",
                 data={"host": host},
-                timeout=3,
+                timeout=1,
             )
             checked_any = True
             result = response.json()
