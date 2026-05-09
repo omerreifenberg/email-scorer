@@ -390,6 +390,16 @@ def _check_display_name(sender: str) -> Signal:
 
 
 def _check_typosquatting(domain: str) -> Signal:
+    """
+    Detects two types of domain impersonation:
+
+    1. Lookalike characters — replacing letters with similar-looking numbers
+       e.g. paypa1.com (1 instead of l)
+
+    2. Brand-in-domain — embedding a brand name inside a fake domain
+       e.g. paypal-login-secure.com, amazon-security-alert.net
+       The brand name appears in the domain, but the domain is not the real one.
+    """
     if not domain:
         return Signal(name="typosquatting", triggered=False, checked=False,
                       weight=SIGNAL_WEIGHTS["typosquatting"])
@@ -397,6 +407,9 @@ def _check_typosquatting(domain: str) -> Signal:
     normalized = _normalize(domain)
 
     for brand in KNOWN_BRANDS:
+        brand_name = brand.split(".")[0].lower()
+
+        # Check 1 — lookalike characters (e.g. paypa1.com)
         if normalized == _normalize(brand) and domain != brand:
             return Signal(
                 name      = "typosquatting",
@@ -404,6 +417,21 @@ def _check_typosquatting(domain: str) -> Signal:
                 checked   = True,
                 weight    = SIGNAL_WEIGHTS["typosquatting"],
                 evidence  = f"Sender domain resembles '{brand}' but uses fake characters",
+            )
+
+        # Check 2 — brand name embedded in a longer fake domain
+        # e.g. "paypal" in "paypal-login-secure.com" but domain != "paypal.com"
+        if brand_name in domain and domain != brand:
+            # Avoid false positives: skip if domain is a known legitimate subdomain
+            # e.g. "mail.paypal.com" contains "paypal" but IS legitimate
+            if domain.endswith("." + brand):
+                continue
+            return Signal(
+                name      = "typosquatting",
+                triggered = True,
+                checked   = True,
+                weight    = SIGNAL_WEIGHTS["typosquatting"],
+                evidence  = f"Sender domain contains '{brand_name}' but is not the real '{brand}'",
             )
 
     return Signal(name="typosquatting", triggered=False, checked=True,
