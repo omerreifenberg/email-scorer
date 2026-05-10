@@ -62,7 +62,7 @@ class AnalysisResponse(BaseModel):
 # CORS — allows the Gmail Add-on (running on Google's servers) to talk to our backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://mail.google.com"],
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
