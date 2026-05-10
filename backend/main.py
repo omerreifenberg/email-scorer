@@ -85,7 +85,7 @@ def health():
 def analyze(payload: EmailRequest, x_api_key: str = Header(None)):
 
     # Step 1 — Authenticate the request
-    if API_KEY and x_api_key != API_KEY:
+    if not API_KEY or x_api_key != API_KEY:
         logger.warning("Rejected request with invalid API key")
         raise HTTPException(status_code=401, detail="Invalid API key")
 
