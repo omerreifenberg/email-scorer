@@ -467,7 +467,7 @@ def _check_links(body: str) -> Signal:
     3. HTTP (not HTTPS) — unencrypted connection, data sent in plain text
     4. Dangerous file extensions — links that directly download executable files
     """
-    urls  = re.findall(r"https?://[^\s<>\"]+", body)[:MAX_LINKS_ANALYZED]
+    urls  = re.findall(r"https?://[^\s<>\"]+", body, re.IGNORECASE)[:MAX_LINKS_ANALYZED]
     found = []
 
     for url in urls:
@@ -549,7 +549,7 @@ def _check_urlhaus(body: str) -> Signal:
     If any link's domain is found → triggered = True (strong evidence of malice)
     If no links, or request fails → checked = False (no effect on score)
     """
-    urls = re.findall(r"https?://[^\s<>\"]+", body)[:MAX_LINKS_URLHAUS]
+    urls = re.findall(r"https?://[^\s<>\"]+", body, re.IGNORECASE)[:MAX_LINKS_URLHAUS]
 
     if not urls:
         return Signal(name="urlhaus", triggered=False, checked=False, weight=0)
