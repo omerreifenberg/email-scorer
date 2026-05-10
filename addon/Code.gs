@@ -3,7 +3,7 @@
 // Replace these values before deploying.
 // ---------------------------------------------------------------------------
 var BACKEND_URL = "https://email-scorer.onrender.com/analyze";
-var API_KEY     = "upwind123"; // Must match SCORER_API_KEY in .env
+var API_KEY     = PropertiesService.getScriptProperties().getProperty("SCORER_API_KEY");
 
 
 // ---------------------------------------------------------------------------
