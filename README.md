@@ -1,6 +1,6 @@
 # Email Scorer — Gmail Add-on
 
-A Gmail Add-on that analyzes every email you open and instantly tells you whether it is **Safe**, **Suspicious**, or **Malicious** with a plain-language explanation of why.
+A Gmail Add-on that scores every email for maliciousness and delivers an instant, explainable verdict — **Safe**, **Suspicious**, or **Malicious**.
 
 ---
 
@@ -52,6 +52,49 @@ The add-on is deliberately thin — it reads the email and renders the result. A
 
 ---
 
+## Setup
+
+### Backend
+
+The backend is a FastAPI app deployable to any Python host. It is currently running on [Render](https://render.com) (free tier).
+
+**Requirements:** Python 3.11+
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+Create a `.env` file:
+```
+ANTHROPIC_API_KEY=your_anthropic_key
+OPENAI_API_KEY=your_openai_key
+SCORER_API_KEY=your_secret_key
+```
+
+| Variable | Where to get it |
+|---|---|
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
+| `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com) |
+| `SCORER_API_KEY` | Any secret string you choose — used to authenticate requests from the Apps Script add-on to the backend |
+
+Run locally:
+```bash
+uvicorn main:app --reload
+```
+
+Health check: `GET /health` → `{"status": "ok"}`
+
+### Gmail Add-on
+
+1. Open [Google Apps Script](https://script.google.com) and create a new project
+2. Paste the contents of `addon/Code.gs`
+3. Set `BACKEND_URL` to your deployed backend URL (e.g. `https://your-app.onrender.com/analyze`) and `API_KEY` to the value of your `SCORER_API_KEY`
+4. Deploy as a Gmail Add-on (Extensions → Add-ons → Deploy)
+5. Install the add-on on your Gmail account
+
+---
+
 ## How the Score Works
 
 ### Step 1 — Technical Signals (11 weighted checks)
@@ -73,6 +116,16 @@ Each check returns a `Signal` with a weight. If triggered, its weight is added t
 | `urgency` | 3 | Language designed to pressure the reader into acting immediately |
 | **Total** | **100** | |
 
+**Weight rationale:**
+
+- **Identity signals** (`display_name_spoofing`, `reply_to_mismatch`) are weighted highest (15 each) because they require deliberate intent to forge and directly indicate deception.
+- **`suspicious_links`** (13) uses dynamic scoring: each suspicious link contributes 2.5 points, capped at 13. This rewards multiple red flags without letting a single signal dominate.
+- **`typosquatting`** (11) and **`domain_reputation`** (10) are strong structural indicators of a malicious sender domain.
+- **Auth signals** (`spf`, `dkim`, `dmarc`) are weighted lower (8, 8, 6) because sophisticated phishing campaigns routinely pass all three by sending through legitimate infrastructure like Gmail or SendGrid.
+- **`personal_info`** (6) and **`hidden_text`** (5) are content-based signals — meaningful but less reliable than structural ones.
+- **`urgency`** (3) is weighted lowest because urgency language alone is common in legitimate emails.
+
+`has_attachments` is collected but not yet scored — a standalone signal has too high a false positive rate. A meaningful attachment signal would combine presence with other indicators (e.g. password-protected ZIP + urgency language).
 
 ### Step 2 — Real-Time URL Check (URLhaus)
 
@@ -143,42 +196,5 @@ email-scorer/
 │   └── requirements.txt
 └── README.md
 ```
-
----
-
-## Setup
-
-### Backend
-
-The backend is a FastAPI app deployable to any Python host. It is currently running on [Render](https://render.com) (free tier).
-
-**Requirements:** Python 3.11+
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-Create a `.env` file:
-```
-ANTHROPIC_API_KEY=your_anthropic_key
-OPENAI_API_KEY=your_openai_key
-SCORER_API_KEY=your_secret_key
-```
-
-Run locally:
-```bash
-uvicorn main:app --reload
-```
-
-Health check: `GET /health` → `{"status": "ok"}`
-
-### Gmail Add-on
-
-1. Open [Google Apps Script](https://script.google.com) and create a new project
-2. Paste the contents of `addon/Code.gs`
-3. Set `BACKEND_URL` and `API_KEY` at the top of the file
-4. Deploy as a Gmail Add-on (Extensions → Add-ons → Deploy)
-5. Install the add-on on your Gmail account
 
 ---
