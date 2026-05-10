@@ -1,4 +1,4 @@
-# Email Scorer — Gmail Add-on
+# Email Scorer - Gmail Add-on
 
 A Gmail Add-on that scores every email for maliciousness and delivers an instant, explainable verdict — **Safe**, **Suspicious**, or **Malicious**.
 
