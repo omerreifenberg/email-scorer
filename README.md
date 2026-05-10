@@ -1,6 +1,6 @@
 # Email Scorer — Gmail Add-on
 
-A Gmail Add-on that analyzes every email you open and instantly tells you whether it is **Safe**, **Suspicious**, or **Malicious** — with a plain-language explanation of why.
+A Gmail Add-on that analyzes every email you open and instantly tells you whether it is **Safe**, **Suspicious**, or **Malicious** with a plain-language explanation of why.
 
 ---
 
@@ -42,7 +42,7 @@ FastAPI Backend (Python, deployed on Render)
     ├── sanitize_input()          — enforce input size limits
     ├── extract_signals()         — 11 weighted signals + real-time URLhaus check
     ├── calculate_technical_score()
-    ├── analyze_with_ai()         — Claude claude-3-5-haiku-20241022
+    ├── analyze_with_ai()         — Claude claude-haiku-4-5
     ├── analyze_with_openai()     — GPT-4o (cross-validation)
     ├── calculate_final_score()   — 60% technical + 40% AI
     └── build_risk_factors()      — plain-language findings for the UI
@@ -73,11 +73,6 @@ Each check returns a `Signal` with a weight. If triggered, its weight is added t
 | `urgency` | 3 | Language designed to pressure the reader into acting immediately |
 | **Total** | **100** | |
 
-**Weight rationale:** Identity signals (`display_name_spoofing`, `reply_to_mismatch`) are weighted highest because they require deliberate intent to forge and directly indicate deception. Auth signals (SPF/DKIM/DMARC) are weighted lower because sophisticated phishing campaigns routinely pass all three by sending through legitimate infrastructure like Gmail or SendGrid.
-
-`suspicious_links` uses dynamic scoring: each suspicious link contributes 2.5 points, capped at the signal's maximum weight (13). This rewards multiple red flags while preventing a single signal from dominating.
-
-`has_attachments` is collected and sent to the backend but not yet scored — reserved for a future signal that combines attachment presence with other indicators (e.g. password-protected ZIP + urgency language).
 
 ### Step 2 — Real-Time URL Check (URLhaus)
 
@@ -92,8 +87,6 @@ The email content (not the technical signals) is independently analyzed by two m
 
 Both models receive the same prompt and scoring guidelines. If both are available, their scores are averaged. If only one is available, that score is used. If neither is available, the final score falls back to the technical score alone — the system degrades gracefully.
 
-Using two independent models reduces the risk of one model being manipulated by prompt injection content embedded in the email body.
-
 ### Step 4 — Final Score
 
 ```
@@ -106,7 +99,6 @@ final_score = round(technical_score × 0.6 + ai_score × 0.4)
 | 31 – 59 | ⚠️ Suspicious |
 | 60 – 100 | 🚨 Malicious |
 
-The 60/40 split gives the technical score more weight while allowing AI analysis to meaningfully influence borderline cases. A purely rule-based score can miss context; a purely AI-based score can be manipulated by carefully crafted email content.
 
 ### Step 5 — Confidence
 
@@ -134,8 +126,7 @@ Security was treated as a first-class concern throughout.
 - The `.env` file is listed in `.gitignore`
 
 **Sensitive data:**
-- The backend logs only metadata (sender domain, subject length, body length) — never email content
-- Email content is never stored or persisted
+- Email content is processed in memory only — never logged or stored
 
 ---
 
@@ -190,3 +181,4 @@ Health check: `GET /health` → `{"status": "ok"}`
 4. Deploy as a Gmail Add-on (Extensions → Add-ons → Deploy)
 5. Install the add-on on your Gmail account
 
+---
